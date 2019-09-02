@@ -8,12 +8,25 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
+const connectedUsers = {};
+
 io.on('connection', socket => {
-    console.log('Nova conexão', socket.id);
+    const { user } = socket.handshake.query;
+
+    console.log(user);
+
+    connectedUsers[user] = socket.id;
 });
 
 mongoose.connect('mongodb+srv://backomnistack:@souza123@cluster0-8ykdl.mongodb.net/onministack8?retryWrites=true&w=majority', {
     useNewUrlParser: true
+});
+
+app.use((req, res, next) => {
+    req.io = io;
+    req.connectedUsers = connectedUsers;
+
+    return next();
 });
 
 app.use(cors());
